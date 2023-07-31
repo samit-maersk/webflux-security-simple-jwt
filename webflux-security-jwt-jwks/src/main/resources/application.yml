@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: @project.name@
+    jwt:
+      private: classpath:id_rsa
+      public: classpath:id_rsa.pub
+  security:
+    user:
+      name: user
+      password: pw
+      roles:
+        - "read"
+        - "write"

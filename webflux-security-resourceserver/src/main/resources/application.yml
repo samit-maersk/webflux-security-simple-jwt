@@ -1,0 +1,17 @@
+
+
+server:
+  port: 9090
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/jwks
