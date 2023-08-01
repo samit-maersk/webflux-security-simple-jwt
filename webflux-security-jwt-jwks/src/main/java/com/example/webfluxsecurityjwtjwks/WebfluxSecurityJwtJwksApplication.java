@@ -9,6 +9,8 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +65,7 @@ public class WebfluxSecurityJwtJwksApplication {
 @RequiredArgsConstructor
 class ApplicationRouter {
 	final JwtEncoder encoder;
+
 	@PostMapping("/login")
 	public Mono<TokenResponse> login(Authentication authentication) {
 		Instant now = Instant.now();
@@ -84,8 +87,9 @@ class ApplicationRouter {
 
 record TokenResponse(String token){}
 
-@Configuration(proxyBeanMethods = false)
+@Configuration(proxyBeanMethods = true)
 @EnableWebFluxSecurity
+@Slf4j
 class SecurityConfig {
 
 	@Bean
@@ -93,8 +97,12 @@ class SecurityConfig {
 		KeyPair keyPair = generateRsaKey();
 		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 		RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+		JWK jwk = new RSAKey.Builder(publicKey).privateKey(privateKey)
+				.keyUse(KeyUse.SIGNATURE)
+				.algorithm(JWSAlgorithm.RS256)
+				.keyID("bael-key-id")
+				.build();
 
-		JWK jwk = new RSAKey.Builder(publicKey).privateKey(privateKey).build();
 		JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
 		return new NimbusJwtEncoder(jwks);
 	}
@@ -119,7 +127,9 @@ class SecurityConfig {
 	@Bean
 	public JWKSet jwkSet() {
 		KeyPair keyPair = generateRsaKey();
-		RSAKey.Builder builder = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+
+		RSAKey.Builder builder = new RSAKey.Builder(publicKey)
 				.keyUse(KeyUse.SIGNATURE)
 				.algorithm(JWSAlgorithm.RS256)
 				.keyID("bael-key-id");
@@ -127,13 +137,13 @@ class SecurityConfig {
 	}
 
 	private static KeyPair generateRsaKey() {
+		log.info("GENERATE RSA KEY being invoked");
 		KeyPair keyPair;
 		try {
 			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
 			keyPairGenerator.initialize(2048);
 			keyPair = keyPairGenerator.generateKeyPair();
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			throw new IllegalStateException(ex);
 		}
 		return keyPair;

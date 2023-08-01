@@ -1,9 +1,7 @@
 spring:
   application:
     name: @project.name@
-    jwt:
-      private: classpath:id_rsa
-      public: classpath:id_rsa.pub
+
   security:
     user:
       name: user
@@ -11,3 +9,7 @@ spring:
       roles:
         - "read"
         - "write"
+
+jwt:
+  private: classpath:app.key
+  public: classpath:app.pub

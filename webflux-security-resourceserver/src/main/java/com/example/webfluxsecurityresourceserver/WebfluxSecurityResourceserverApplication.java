@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -37,12 +38,12 @@ record Message(String message){}
 class SecurityConfiguration {
 	@Bean
 	SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
-		http.authorizeExchange((authorize) -> authorize
+		http.csrf(csrfSpec -> csrfSpec.disable())
+				.authorizeExchange((authorize) -> authorize
 						.anyExchange().authenticated()
 				)
 				.oauth2ResourceServer(oauth2ResourceServer ->
-						oauth2ResourceServer
-								.jwt().jwtAuthenticationConverter(jwtAuthenticationConverter()));
+						oauth2ResourceServer.jwt(Customizer.withDefaults()));
 		return http.build();
 	}
 
