@@ -10,6 +10,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -64,9 +65,9 @@ public class WebfluxSecurityJwtJwksApplication {
 @RequiredArgsConstructor
 class ApplicationRouter {
 	final JwtEncoder encoder;
-
 	@PostMapping("/login")
 	public Mono<TokenResponse> login(Authentication authentication) {
+
 		Instant now = Instant.now();
 		long expiry = 36000L;
 		String scope = authentication.getAuthorities().stream()
@@ -90,8 +91,11 @@ record TokenResponse(String token){}
 @EnableWebFluxSecurity
 @Slf4j
 class SecurityConfig {
+	//Either use the KeyPair or Individual RSAPublicKey and RSAPrivateKey instance for private/public pair
 	private static final KeyPair keyPair = generateRsaKey();
 
+	@Value("${jwt.public}") RSAPublicKey publicKey;
+	@Value("${jwt.private}") RSAPrivateKey privateKe;
 	@Bean
 	SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 		return
