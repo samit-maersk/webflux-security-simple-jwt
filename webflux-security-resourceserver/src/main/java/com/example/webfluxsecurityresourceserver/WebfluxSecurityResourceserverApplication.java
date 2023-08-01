@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
@@ -26,7 +28,9 @@ public class WebfluxSecurityResourceserverApplication {
 	RouterFunction routerFunction() {
 		return RouterFunctions
 				.route()
-				.GET("/greet", request -> ServerResponse.ok().bodyValue(new Message("Hello World")))
+				.GET("/greet", request -> {
+					return ServerResponse.ok().bodyValue(new Message("Hello World"));
+				})
 				.build();
 	}
 

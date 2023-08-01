@@ -10,7 +10,6 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -91,22 +90,7 @@ record TokenResponse(String token){}
 @EnableWebFluxSecurity
 @Slf4j
 class SecurityConfig {
-
-	@Bean
-	JwtEncoder jwtEncoder() {
-		KeyPair keyPair = generateRsaKey();
-		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-		RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-		JWK jwk = new RSAKey.Builder(publicKey).privateKey(privateKey)
-				.keyUse(KeyUse.SIGNATURE)
-				.algorithm(JWSAlgorithm.RS256)
-				.keyID("bael-key-id")
-				.build();
-
-		JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
-		return new NimbusJwtEncoder(jwks);
-	}
-
+	private static final KeyPair keyPair = generateRsaKey();
 
 	@Bean
 	SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -125,18 +109,29 @@ class SecurityConfig {
 	}
 
 	@Bean
-	public JWKSet jwkSet() {
-		KeyPair keyPair = generateRsaKey();
+	JwtEncoder jwtEncoder() {
 		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+		RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+		JWK jwk = new RSAKey.Builder(publicKey).privateKey(privateKey)
+				.keyUse(KeyUse.SIGNATURE)
+				.algorithm(JWSAlgorithm.RS256)
+				.keyID("bael-key-id")
+				.build();
 
+		JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
+		return new NimbusJwtEncoder(jwks);
+	}
+
+	@Bean
+	public JWKSet jwkSet() {
+		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 		RSAKey.Builder builder = new RSAKey.Builder(publicKey)
 				.keyUse(KeyUse.SIGNATURE)
 				.algorithm(JWSAlgorithm.RS256)
 				.keyID("bael-key-id");
 		return new JWKSet(builder.build());
 	}
-
-	private static KeyPair generateRsaKey() {
+	private static final KeyPair generateRsaKey() {
 		log.info("GENERATE RSA KEY being invoked");
 		KeyPair keyPair;
 		try {
